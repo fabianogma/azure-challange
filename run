@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+dir="-chdir=terraform/env"
+
+terraform $dir init
+
+if [ $? -eq 0 ]
+then
+    echo "Status validate: " 
+    terraform $dir validate
+    if [ $? -eq 0 ]
+    then
+        echo "Status de Plan: "
+        terraform $dir plan
+
+        printf "%s " "Press enter to continue or ctrl+c to cancell"
+        read ans
+        
+        if [ $? -eq 0 ]
+        then 
+            terraform $dir apply
+        exit 0
+        fi
+    fi
+fi

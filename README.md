@@ -1,6 +1,6 @@
 # azure-challange
 
-![arq](./img/arq.jpg)
+![arq](./assets/arq.jpg)
 
 
 Requisitos :
