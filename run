@@ -45,7 +45,7 @@ else
     }
 
     git-commit() {
-        branch="(git symbolic-ref HEAD | sed -e "s/^refs\/heads\///")"
+        branch=$(git symbolic-ref HEAD | sed -e "s/^refs\/heads\///")
 
         git add .
 
@@ -54,7 +54,7 @@ else
 
         git commit -m "$commitMessage" >/dev/null
 
-        git push origin $branch
+        git push origin ${branch}
     }
 fi
 
