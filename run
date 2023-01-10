@@ -1,24 +1,48 @@
 #!/usr/bin/env bash
-dir="-chdir=terraform/env"
 
-terraform $dir init
+# To do list, criar funções:
+# 1 storage account
+# 2 config de variaveis de backend
+# 3 para iniciar o terraform
+# 4 função pra destruir/limpar ambiente
+# 5 função de git push
 
-if [ $? -eq 0 ]
-then
-    echo "Status validate: " 
-    terraform $dir validate
-    if [ $? -eq 0 ]
-    then
-        echo "Status de Plan: "
-        terraform $dir plan
+if [ -z "$@" ]; then
+    echo -e "o que você que executar?\n
+    1- Git commit: ./run git
+    2- Terraform: ./run tf
+    3- Terraform remote tfstate: ./run tfstate
+    4- Limpar deploy: ./run clear"
+    exit 0
 
-        printf "%s " "Press enter to continue or ctrl+c to cancell"
-        read ans
-        
+else
+    
+    tf() {
+        dir="-chdir=terraform/env"
+        echo -e "Importando provider:"
+        terraform $dir init
+
         if [ $? -eq 0 ]
-        then 
-            terraform $dir apply
-        exit 0
+        then
+            echo -e "\nValidate Status: "
+            terraform $dir validate
+            
+            if [ $? -eq 0 ]
+            then
+                echo -e "\nPlan Status: "
+                terraform $dir plan -out=tfplan
+                
+                read -p "Press enter to start Apply or CTRL+C to finish the script."
+
+                if [ $? -eq 0 ]
+                then
+                    terraform $dir apply tfplan
+                exit 0
+                fi
+            fi
         fi
-    fi
+    }
+
 fi
+
+"$@"
