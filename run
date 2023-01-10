@@ -54,7 +54,7 @@ else
 
         git commit -m "$commitMessage" >/dev/null
 
-        echo -e "\n${blue}Push:${nc}\n"
+        echo -e "\n${blue}Push:${green}"
         git push origin ${branch}
     }
 fi
