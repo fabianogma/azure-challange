@@ -34,6 +34,7 @@ else
                 echo -e "\nPlan Status: "
                 terraform $dir plan -out=tfplan
 
+                echo -e "\n"
                 read -p "Press enter to start Apply or CTRL+C to finish the script."
 
                 if [ $? -eq 0 ]; then
@@ -42,6 +43,69 @@ else
                 fi
             fi
         fi
+    }
+
+    tfstate() {
+        rg_name=tfstate
+        stg_name=tfstatedesafiodevops
+        cnt_name=tfstate
+        PS3='Selecione o número desejado: '
+
+        az account show >/dev/null 2>&1
+
+        if [ $? -gt 0 ]; then
+            echo -e "\n${blue}Você não está logado, por favor, realizar login:${nc}"
+            az login --use-device-code
+        fi
+
+        echo -e "\n${blue}Atualmente você está logado na subscription: ${nc}"
+        az account show --output table
+
+        echo -e "\n${blue}Change subscription?${nc}"
+
+        select yn in "Yes" "No"; do
+            case $yn in
+            Yes)
+                echo -e "\n${blue}Lista de subscription disponiveis:${nc}"
+                az account list -o table
+
+                printf "\n${blue}Digite a subscription a ser utilizada:${nc}"
+                read subscription
+
+                az account set -s "${subscription}"
+
+                while [ $? -gt 0 ]; do
+                    printf "\n${blue}Subscription invalida! Digite novamente: ${nc}"
+                    read subscription
+
+                    az account set -s "${subscription}"
+                done
+
+                az account list -o table
+
+                echo
+                break
+                ;;
+            No)
+                break
+                ;;
+            *)
+                echo "Opção inválida"
+                ;;
+            esac
+        done
+
+        # Create resource group
+        az group create --name $rg_name --location eastus
+
+        # Create storage account
+        az storage account create --resource-group $rg_name --name $stg_name --sku Standard_LRS --encryption-services blob
+
+        # Create blob container
+        az storage container create --name $cnt_name --account-name $stg_name
+
+        account_key=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
+        export TF_ACCESS_KEY=$account_key
     }
 
     git-commit() {
