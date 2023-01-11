@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+dir="-chdir=terraform/env"
+
+networkwatcherrg=NetworkWatcherRg
+rg_name=tfstate
+stg_name=tfstatedesafiodevops
+cnt_name=tfstate
+key=terraform.tfstate
+
 blue='\033[0;34m'
 green='\033[0;32m'
 nc='\033[0m'
@@ -22,9 +30,13 @@ if [ -z "$@" ]; then
 else
 
     tf() {
-        dir="-chdir=terraform/env"
-        echo -e "Importando provider:"
-        terraform $dir init
+        echo -e "Importando provider: ${TF_BACKEND_STORAGE_ACCOUNT}"
+        terraform $dir init -reconfigure \
+            -backend-config "storage_account_name=${TF_BACKEND_STORAGE_ACCOUNT}" \
+            -backend-config "container_name=${TF_BACKEND_CONTAINER}" \
+            -backend-config "subscription_id=${TF_SUBSCRIPTION_ID}" \
+            -backend-config "key=${TF_BACKEND_KEY}" \
+            -backend-config "access_key=${TF_ACCESS_KEY}"
 
         if [ $? -eq 0 ]; then
             echo -e "\nValidate Status: "
@@ -46,9 +58,6 @@ else
     }
 
     tfstate() {
-        rg_name=tfstate
-        stg_name=tfstatedesafiodevops
-        cnt_name=tfstate
         PS3='Selecione o número desejado: '
 
         az account show >/dev/null 2>&1
@@ -104,8 +113,30 @@ else
         # Create blob container
         az storage container create --name $cnt_name --account-name $stg_name
 
-        account_key=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
+        account_key=$(az storage account keys list --resource-group $rg_name --account-name $stg_name --query '[0].value' -o tsv)
+        subscription_id=$(az account show --query "id" | xargs)
+
+        export TF_SUBSCRIPTION_ID=$subscription_id
+        export TF_BACKEND_STORAGE_ACCOUNT=$stg_name
+        export TF_BACKEND_CONTAINER=$cnt_name
+        export TF_BACKEND_KEY=$key
         export TF_ACCESS_KEY=$account_key
+    }
+
+    clear() {
+        terraform $dir destroy --auto-approve
+
+        az group delete --name $rg_name --yes
+        az group delete --name $networkwatcherrg --yes
+
+        rm -rf terraform/env/.terraform
+        rm terraform/env/tfplan terraform/env/.terraform.lock.hcl
+
+        unset TF_SUBSCRIPTION_ID
+        unset TF_BACKEND_STORAGE_ACCOUNT
+        unset TF_BACKEND_CONTAINER
+        unset TF_BACKEND_KEY
+        unset TF_ACCESS_KEY
     }
 
     git-commit() {
