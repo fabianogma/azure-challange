@@ -1,24 +1,150 @@
 #!/usr/bin/env bash
+
 dir="-chdir=terraform/env"
 
-terraform $dir init
+networkwatcherrg=NetworkWatcherRg
+rg_name=tfstate
+stg_name=tfstatedesafiodevops
+cnt_name=tfstate
+key=terraform.tfstate
 
-if [ $? -eq 0 ]
-then
-    echo "Status validate: " 
-    terraform $dir validate
-    if [ $? -eq 0 ]
-    then
-        echo "Status de Plan: "
-        terraform $dir plan
+blue='\033[0;34m'
+green='\033[0;32m'
+nc='\033[0m'
 
-        printf "%s " "Press enter to continue or ctrl+c to cancell"
-        read ans
-        
-        if [ $? -eq 0 ]
-        then 
-            terraform $dir apply
-        exit 0
+if [ -z "$@" ]; then
+    echo -e "o que você que executar?\n
+    1- Git commit: ./run git-commit
+    2- Terraform: ./run tf
+    3- Terraform remote tfstate: ./run tfstate
+    4- Limpar deploy: ./run clear"
+    exit 0
+
+else
+
+    tf() {
+        echo -e "Importando provider: ${TF_BACKEND_STORAGE_ACCOUNT}"
+        terraform $dir init -reconfigure \
+            -backend-config "storage_account_name=${TF_BACKEND_STORAGE_ACCOUNT}" \
+            -backend-config "container_name=${TF_BACKEND_CONTAINER}" \
+            -backend-config "subscription_id=${TF_SUBSCRIPTION_ID}" \
+            -backend-config "key=${TF_BACKEND_KEY}" \
+            -backend-config "access_key=${TF_ACCESS_KEY}"
+
+        if [ $? -eq 0 ]; then
+            echo -e "\nValidate Status: "
+            terraform $dir validate
+
+            if [ $? -eq 0 ]; then
+                echo -e "\nPlan Status: "
+                terraform $dir plan -out=tfplan
+
+                echo -e "\n"
+                read -p "Press enter to start Apply or CTRL+C to finish the script."
+
+                if [ $? -eq 0 ]; then
+                    terraform $dir apply tfplan
+                    exit 0
+                fi
+            fi
         fi
-    fi
+    }
+
+    tfstate() {
+        PS3='Selecione o número desejado: '
+
+        az account show >/dev/null 2>&1
+
+        if [ $? -gt 0 ]; then
+            echo -e "\n${blue}Você não está logado, por favor, realizar login:${nc}"
+            az login --use-device-code
+        fi
+
+        echo -e "\n${blue}Atualmente você está logado na subscription: ${nc}"
+        az account show --output table
+
+        echo -e "\n${blue}Change subscription?${nc}"
+
+        select yn in "Yes" "No"; do
+            case $yn in
+            Yes)
+                echo -e "\n${blue}Lista de subscription disponiveis:${nc}"
+                az account list -o table
+
+                printf "\n${blue}Digite a subscription a ser utilizada:${nc}"
+                read subscription
+
+                az account set -s "${subscription}"
+
+                while [ $? -gt 0 ]; do
+                    printf "\n${blue}Subscription invalida! Digite novamente: ${nc}"
+                    read subscription
+
+                    az account set -s "${subscription}"
+                done
+
+                az account list -o table
+
+                echo
+                break
+                ;;
+            No)
+                break
+                ;;
+            *)
+                echo "Opção inválida"
+                ;;
+            esac
+        done
+
+        # Create resource group
+        az group create --name $rg_name --location eastus
+
+        # Create storage account
+        az storage account create --resource-group $rg_name --name $stg_name --sku Standard_LRS --encryption-services blob
+
+        # Create blob container
+        az storage container create --name $cnt_name --account-name $stg_name
+
+        account_key=$(az storage account keys list --resource-group $rg_name --account-name $stg_name --query '[0].value' -o tsv)
+        subscription_id=$(az account show --query "id" | xargs)
+
+        export TF_SUBSCRIPTION_ID=$subscription_id
+        export TF_BACKEND_STORAGE_ACCOUNT=$stg_name
+        export TF_BACKEND_CONTAINER=$cnt_name
+        export TF_BACKEND_KEY=$key
+        export TF_ACCESS_KEY=$account_key
+    }
+
+    clear() {
+        terraform $dir destroy --auto-approve
+
+        az group delete --name $rg_name --yes
+        az group delete --name $networkwatcherrg --yes
+
+        rm -rf terraform/env/.terraform
+        rm terraform/env/tfplan terraform/env/.terraform.lock.hcl
+
+        unset TF_SUBSCRIPTION_ID
+        unset TF_BACKEND_STORAGE_ACCOUNT
+        unset TF_BACKEND_CONTAINER
+        unset TF_BACKEND_KEY
+        unset TF_ACCESS_KEY
+    }
+
+    git-commit() {
+        branch=$(git symbolic-ref HEAD | sed -e "s/^refs\/heads\///")
+
+        git add .
+
+        printf "${blue}Mensagem do commit: ${green}"
+        read commitMessage
+
+        git commit -m "$commitMessage" >/dev/null
+
+        echo -e "\n${blue}Push:${green}"
+        git push origin ${branch}
+    }
 fi
+
+"$@"
