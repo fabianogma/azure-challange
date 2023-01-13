@@ -13,11 +13,11 @@ green='\033[0;32m'
 nc='\033[0m'
 
 if [ -z "$@" ]; then
-    echo -e "o que você que executar?\n
+    echo -e "Execute em BASH! O que você deseja executar?\n
     1- Git commit: ./run git-commit
-    2- Terraform: ./run tf
-    3- Terraform remote tfstate: ./run tfstate
-    4- Limpar deploy: ./run clear"
+    2- Terraform: source ./run tf
+    3- Terraform remote tfstate: source ./run tfstate
+    4- Limpar deploy: source ./run clear"
     exit 0
 
 else
