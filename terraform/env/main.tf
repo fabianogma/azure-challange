@@ -59,6 +59,34 @@ module "vnet" {
       location      = module.resource_group.rg_info.hub.location
       tag           = module.resource_group.rg_info.hub.tags
     }
+    public = {
+      vnet_name     = "vnet-public-spoke-eastus"
+      address_space = ["10.2.0.0/16"]
+      rg_name       = module.resource_group.rg_info.public.name
+      location      = module.resource_group.rg_info.public.location
+      tag           = module.resource_group.rg_info.public.tags
+    }
+    private = {
+      vnet_name     = "vnet-private-spoke-eastus"
+      address_space = ["10.3.0.0/16"]
+      rg_name       = module.resource_group.rg_info.private.name
+      location      = module.resource_group.rg_info.private.location
+      tag           = module.resource_group.rg_info.private.tags
+    }
+    database = {
+      vnet_name     = "vnet-database-spoke-eastus"
+      address_space = ["10.4.0.0/16"]
+      rg_name       = module.resource_group.rg_info.database.name
+      location      = module.resource_group.rg_info.database.location
+      tag           = module.resource_group.rg_info.database.tags
+    }
+    streaming = {
+      vnet_name     = "vnet-streaming-spoke-eastus"
+      address_space = ["10.5.0.0/16"]
+      rg_name       = module.resource_group.rg_info.streaming.name
+      location      = module.resource_group.rg_info.streaming.location
+      tag           = module.resource_group.rg_info.streaming.tags
+    }
   }
 
   snet = {
