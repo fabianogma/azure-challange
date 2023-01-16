@@ -134,3 +134,89 @@ module "vnet" {
     }
   }
 }
+
+module "peering" {
+  source = "../modules/network_peering"
+  hub_to_public = {
+    peering_name     = "hub_to_public"
+    rg_name          = module.resource_group.rg_info.hub.name
+    vnet_name        = module.vnet.vnet_info.hub.name
+    id               = module.vnet.vnet_info.public.id
+    allow_vnet_acces = true
+    allow_ft         = true
+    allow_gt         = true
+    use_rg           = false
+  }
+  public_to_hub = {
+    peering_name     = "public_to_hub"
+    rg_name          = module.resource_group.rg_info.public.name
+    vnet_name        = module.vnet.vnet_info.public.name
+    id               = module.vnet.vnet_info.hub.id
+    allow_vnet_acces = true
+    allow_ft         = false
+    allow_gt         = false
+    use_rg           = true
+  }
+  hub_to_private = {
+    peering_name     = "hub_to_private"
+    rg_name          = module.resource_group.rg_info.hub.name
+    vnet_name        = module.vnet.vnet_info.hub.name
+    id               = module.vnet.vnet_info.private.id
+    allow_vnet_acces = true
+    allow_ft         = true
+    allow_gt         = true
+    use_rg           = false
+  }
+  private_to_hub = {
+    peering_name     = "private_to_hub"
+    rg_name          = module.resource_group.rg_info.private.name
+    vnet_name        = module.vnet.vnet_info.private.name
+    id               = module.vnet.vnet_info.hub.id
+    allow_vnet_acces = true
+    allow_ft         = false
+    allow_gt         = false
+    use_rg           = true
+  }
+  hub_to_database = {
+    peering_name     = "hub_to_database"
+    rg_name          = module.resource_group.rg_info.hub.name
+    vnet_name        = module.vnet.vnet_info.hub.name
+    id               = module.vnet.vnet_info.database.id
+    allow_vnet_acces = true
+    allow_ft         = true
+    allow_gt         = true
+    use_rg           = false
+  }
+  database_to_hub = {
+    peering_name     = "database_to_hub"
+    rg_name          = module.resource_group.rg_info.database.name
+    vnet_name        = module.vnet.vnet_info.database.name
+    id               = module.vnet.vnet_info.hub.id
+    allow_vnet_acces = true
+    allow_ft         = false
+    allow_gt         = false
+    use_rg           = true
+  }
+  hub_to_streaming = {
+    peering_name     = "hub_to_streaming"
+    rg_name          = module.resource_group.rg_info.hub.name
+    vnet_name        = module.vnet.vnet_info.hub.name
+    id               = module.vnet.vnet_info.streaming.id
+    allow_vnet_acces = true
+    allow_ft         = true
+    allow_gt         = true
+    use_rg           = false
+  }
+  streaming_to_hub = {
+    peering_name     = "streaming_to_hub"
+    rg_name          = module.resource_group.rg_info.streaming.name
+    vnet_name        = module.vnet.vnet_info.streaming.name
+    id               = module.vnet.vnet_info.hub.id
+    allow_vnet_acces = true
+    allow_ft         = false
+    allow_gt         = false
+    use_rg           = true
+  }
+
+  depends_on = [module.vnet]
+}
