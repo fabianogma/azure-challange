@@ -1,4 +1,4 @@
-resource "azurerm_virtual_network_peering" "yhis" {
+resource "azurerm_virtual_network_peering" "this" {
   for_each                     = var.peering
   name                         = each.value.peering_name
   resource_group_name          = each.value.rg_name
