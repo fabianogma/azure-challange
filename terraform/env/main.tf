@@ -108,5 +108,29 @@ module "vnet" {
       rg_name          = module.resource_group.rg_info.hub.name
       vnet_name        = module.vnet.vnet_info.hub.name
     }
+    spoke_public = {
+      name             = "PublicSubnet"
+      address_prefixes = ["10.2.1.0/24"]
+      rg_name          = module.resource_group.rg_info.public.name
+      vnet_name        = module.vnet.vnet_info.public.name
+    }
+    spoke_private = {
+      name             = "PrivateSubnet"
+      address_prefixes = ["10.3.1.0/24"]
+      rg_name          = module.resource_group.rg_info.private.name
+      vnet_name        = module.vnet.vnet_info.private.name
+    }
+    spoke_database = {
+      name             = "DatabaseSubnet"
+      address_prefixes = ["10.4.1.0/24"]
+      rg_name          = module.resource_group.rg_info.database.name
+      vnet_name        = module.vnet.vnet_info.database.name
+    }
+    spoke_streaming = {
+      name             = "StreamingSubnet"
+      address_prefixes = ["10.5.1.0/24"]
+      rg_name          = module.resource_group.rg_info.streaming.name
+      vnet_name        = module.vnet.vnet_info.streaming.name
+    }
   }
 }
