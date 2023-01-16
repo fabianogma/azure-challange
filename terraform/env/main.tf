@@ -90,23 +90,23 @@ module "vnet" {
   }
 
   snet = {
-    MngmtSubnet = {
+    hub_MngmtSubnet = {
       name             = "MngmtSubnet"
       address_prefixes = ["10.1.1.0/24"]
       rg_name          = module.resource_group.rg_info.hub.name
-      vnet_name        = module.vnet.vnet_info.vnet1.name
+      vnet_name        = module.vnet.vnet_info.hub.name
     }
-    SharedSubnet = {
+    hub_SharedSubnet = {
       name             = "SharedSubnet"
       address_prefixes = ["10.1.2.0/24"]
       rg_name          = module.resource_group.rg_info.hub.name
-      vnet_name        = module.vnet.vnet_info.vnet1.name
+      vnet_name        = module.vnet.vnet_info.hub.name
     }
-    InboundSubnet = {
+    hub_InboundSubnet = {
       name             = "InboundSubnet"
       address_prefixes = ["10.1.3.0/24"]
       rg_name          = module.resource_group.rg_info.hub.name
-      vnet_name        = module.vnet.vnet_info.vnet1.name
+      vnet_name        = module.vnet.vnet_info.hub.name
     }
   }
 }
