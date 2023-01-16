@@ -52,8 +52,8 @@ module "resource_group" {
 module "vnet" {
   source = "../modules/virtual_network"
   vnet = {
-    vnet1 = {
-      vnet_name     = "vnet-refactor"
+    hub = {
+      vnet_name     = "vnet-hub-eastus"
       address_space = ["10.1.0.0/16"]
       rg_name       = module.resource_group.rg_info.hub.name
       location      = module.resource_group.rg_info.hub.location
@@ -62,31 +62,23 @@ module "vnet" {
   }
 
   snet = {
-    snet1 = {
-      name             = "managementsubnet"
-      address_prefixes = ["10.1.1.0/27"]
+    MngmtSubnet = {
+      name             = "MngmtSubnet"
+      address_prefixes = ["10.1.1.0/24"]
       rg_name          = module.resource_group.rg_info.hub.name
       vnet_name        = module.vnet.vnet_info.vnet1.name
     }
-    snet2 = {
-      name             = "frontendsubnet"
-      address_prefixes = ["10.1.2.0/27"]
+    SharedSubnet = {
+      name             = "SharedSubnet"
+      address_prefixes = ["10.1.2.0/24"]
       rg_name          = module.resource_group.rg_info.hub.name
       vnet_name        = module.vnet.vnet_info.vnet1.name
     }
-    snet3 = {
-      name             = "databasesubnet"
-      address_prefixes = ["10.1.3.0/26"]
+    InboundSubnet = {
+      name             = "InboundSubnet"
+      address_prefixes = ["10.1.3.0/24"]
       rg_name          = module.resource_group.rg_info.hub.name
       vnet_name        = module.vnet.vnet_info.vnet1.name
-      service_endpoint = ["Microsoft.Storage"]
-      delegation = {
-        delegation_name = "flexible-server"
-        service_delegation = {
-          service_delegation_name = "Microsoft.DBforMySQL/flexibleServers"
-          actions                 = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-        }
-      }
     }
   }
 }
